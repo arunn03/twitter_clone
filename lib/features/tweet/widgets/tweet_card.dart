@@ -118,6 +118,42 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                 ),
                               ],
                             ),
+                            if (widget.tweet.repliedTo.isNotEmpty) ...[
+                              const SizedBox(height: 5),
+                              ref
+                                  .watch(
+                                      tweetByIdProvider(widget.tweet.repliedTo))
+                                  .when(
+                                    data: (tweet) {
+                                      final user = ref
+                                          .watch(userDataProvider(tweet.uid))
+                                          .value;
+                                      return RichText(
+                                        text: TextSpan(
+                                          text: 'Replying to ',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            color: Pallete.greyColor,
+                                          ),
+                                          children: [
+                                            TextSpan(
+                                              text: '@${user?.name}',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Pallete.blueColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                    error: (error, st) {
+                                      return ErrorText(text: error.toString());
+                                    },
+                                    loading: () => const Loader(),
+                                  ),
+                            ],
                             const SizedBox(height: 5),
                             TweetText(
                               text: widget.tweet.text,

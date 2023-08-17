@@ -27,7 +27,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: UIConstants.appBar(),
+      appBar: _pageIndex == 0 ? UIConstants.appBar() : null,
       body: IndexedStack(
         index: _pageIndex,
         children: UIConstants.bottomtabPages,

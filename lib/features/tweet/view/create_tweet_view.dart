@@ -43,6 +43,7 @@ class _CreateTweetViewState extends ConsumerState<CreateTweetView> {
           text: _textController.text,
           images: _images,
           context: context,
+          repliedTo: '',
         );
   }
 

@@ -29,6 +29,7 @@ class TweetController extends StateNotifier<bool> {
     required String text,
     required List<File> images,
     required BuildContext context,
+    required String repliedTo,
   }) {
     if (text.isEmpty) {
       showSnackBar(context, 'Please enter some text');
@@ -36,9 +37,18 @@ class TweetController extends StateNotifier<bool> {
     }
 
     if (images.isNotEmpty) {
-      _shareImageTweet(text: text, images: images, context: context);
+      _shareImageTweet(
+        text: text,
+        images: images,
+        context: context,
+        repliedTo: repliedTo,
+      );
     } else {
-      _shareTextTweet(text: text, context: context);
+      _shareTextTweet(
+        text: text,
+        context: context,
+        repliedTo: repliedTo,
+      );
     }
   }
 
@@ -74,6 +84,7 @@ class TweetController extends StateNotifier<bool> {
     required String text,
     required List<File> images,
     required BuildContext context,
+    required String repliedTo,
   }) async {
     final user = _ref.read(currentUserDetailsProvider).value!;
     final imageLinks = await _storageAPI.uploadImages(images);
@@ -90,6 +101,7 @@ class TweetController extends StateNotifier<bool> {
       commentIds: const [],
       reshareCount: 0,
       retweetedBy: '',
+      repliedTo: repliedTo,
     );
     state = true;
     final res = await _tweetAPI.shareTweet(tweet: tweet);
@@ -135,6 +147,7 @@ class TweetController extends StateNotifier<bool> {
   void _shareTextTweet({
     required String text,
     required BuildContext context,
+    required String repliedTo,
   }) async {
     final user = _ref.read(currentUserDetailsProvider).value!;
     final tweet = Tweet(
@@ -150,6 +163,7 @@ class TweetController extends StateNotifier<bool> {
       commentIds: const [],
       reshareCount: 0,
       retweetedBy: '',
+      repliedTo: repliedTo,
     );
     state = true;
     final res = await _tweetAPI.shareTweet(tweet: tweet);
@@ -186,6 +200,21 @@ class TweetController extends StateNotifier<bool> {
     }
     return hashtags;
   }
+
+  Future<List<Tweet>> getRepliesToTweet(Tweet tweet) async {
+    final documents = await _tweetAPI.getRepliesToTweet(tweet);
+    final tweets = documents
+        .map(
+          (document) => Tweet.fromMap(document.data),
+        )
+        .toList();
+    return tweets;
+  }
+
+  Future<Tweet> getTweetById(String id) async {
+    final document = await _tweetAPI.getTweetById(id);
+    return Tweet.fromMap(document.data);
+  }
 }
 
 final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
@@ -206,4 +235,14 @@ final tweetsProvider = FutureProvider((ref) {
 final latestTweetProvider = StreamProvider((ref) {
   final tweetAPI = ref.watch(tweetAPIprovider);
   return tweetAPI.getLatestTweet();
+});
+
+final repliesToTweetProvider = FutureProvider.family((ref, Tweet tweet) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getRepliesToTweet(tweet);
+});
+
+final tweetByIdProvider = FutureProvider.family((ref, String id) {
+  final tweetController = ref.watch(tweetControllerProvider.notifier);
+  return tweetController.getTweetById(id);
 });

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/common/common.dart';
 import 'package:twitter_clone/constants/constants.dart';
 import 'package:twitter_clone/features/tweet/controller/tweet_controller.dart';
+import 'package:twitter_clone/features/tweet/view/tweet_reply_view.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_card.dart';
 import 'package:twitter_clone/models/models.dart';
 import 'package:twitter_clone/theme/theme.dart';
@@ -35,8 +36,16 @@ class TweetList extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
-                      TweetCard(tweet: tweets[index]),
-                      const Divider(thickness: .3, color: Pallete.greyColor),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            TweetReplyView.route(tweets[index]),
+                          );
+                        },
+                        child: TweetCard(tweet: tweets[index]),
+                      ),
+                      const Divider(thickness: .2, color: Pallete.greyColor),
                     ],
                   );
                 },
@@ -51,7 +60,15 @@ class TweetList extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   return Column(
                     children: [
-                      TweetCard(tweet: tweets[index]),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            TweetReplyView.route(tweets[index]),
+                          );
+                        },
+                        child: TweetCard(tweet: tweets[index]),
+                      ),
                       const Divider(thickness: .3, color: Pallete.greyColor),
                     ],
                   );

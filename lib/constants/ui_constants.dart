@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:twitter_clone/constants/constants.dart';
+import 'package:twitter_clone/features/search/view/search_view.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_list.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
@@ -18,12 +19,8 @@ class UIConstants {
   }
 
   static const List<Widget> bottomtabPages = [
-    Center(
-      child: TweetList(),
-    ),
-    Center(
-      child: Text('Search Page'),
-    ),
+    TweetList(),
+    SearchView(),
     Center(
       child: Text('Notification Page'),
     ),
