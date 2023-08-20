@@ -23,7 +23,6 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-
     return MaterialApp(
       darkTheme: AppTheme.theme,
       home: FutureBuilder(
@@ -35,7 +34,7 @@ class App extends ConsumerWidget {
             if (snapshot.hasError) {
               return ErrorScreen(text: snapshot.error.toString());
             }
-            if (snapshot.hasData) {
+            if (snapshot.hasData && snapshot.data != null) {
               return const HomeView();
             } else {
               return const LoginView();

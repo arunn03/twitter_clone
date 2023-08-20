@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:twitter_clone/features/tweet/view/hashtag_tweet_view.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
 class TweetText extends StatelessWidget {
@@ -19,6 +21,13 @@ class TweetText extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Pallete.blueColor,
             ),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                Navigator.push(
+                  context,
+                  HashtagTweetsView.route(word),
+                );
+              },
           ),
         );
       } else if (word.startsWith('www.') ||

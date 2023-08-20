@@ -5,9 +5,17 @@ class AppwriteConstants {
 
   static const String usersCollectionId = '64d9cb78a68ea87f299f';
   static const String tweetsCollectionId = '64dae65f32e8d4473463';
+  static const String notCollectionId = '64e1cfa8944ea9350247';
 
   static const String imagesBucketId = '64db2f035ebfc8bfedd1';
 
   static String imageURL(String imageId) =>
       '$endPoint/storage/buckets/$imagesBucketId/files/$imageId/view?project=$projectId&mode=admin';
+
+  static String imageIdFromURL(String imageURL) {
+    final imageIdStart = imageURL.indexOf('files/');
+    final imageIdEnd = imageURL.indexOf('/view');
+    final imageId = imageURL.substring(imageIdStart + 6, imageIdEnd);
+    return imageId;
+  }
 }

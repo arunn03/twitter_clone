@@ -10,30 +10,33 @@ import 'package:twitter_clone/models/models.dart';
 final tweetAPIprovider = Provider(
   (ref) {
     final db = ref.watch(appwriteDatabaseProvider);
-    final realtime = ref.watch(appwriteRealtimeProvider);
-    return TweetAPI(db: db, realtime: realtime);
+    // final realtime = ref.watch(appwriteRealtimeProvider);
+    return TweetAPI(db: db);
   },
 );
 
 abstract class ITweetAPI {
   FutureEither<Document> shareTweet({required Tweet tweet});
   Future<List<Document>> getTweets();
-  Stream<RealtimeMessage> getLatestTweet();
+  // Stream<RealtimeMessage> getLatestTweet();
   FutureEitherVoid toggleTweetLike(Tweet tweet);
   FutureEitherVoid updateReshareCount(Tweet tweet);
+  FutureEitherVoid updateCommentIds(Tweet tweet);
   Future<List<Document>> getRepliesToTweet(Tweet tweet);
   Future<Document> getTweetById(String id);
+  Future<List<Document>> getUserTweets(String uid);
+  Future<List<Document>> getTweetsByHashtag(String hashtag);
 }
 
 class TweetAPI implements ITweetAPI {
   const TweetAPI({
     required Databases db,
-    required Realtime realtime,
-  })  : _db = db,
-        _realtime = realtime;
+    // required Realtime realtime,
+  }) : _db = db;
+  // _realtime = realtime;
 
   final Databases _db;
-  final Realtime _realtime;
+  // final Realtime _realtime;
 
   @override
   FutureEither<Document> shareTweet({required Tweet tweet}) async {
@@ -65,12 +68,12 @@ class TweetAPI implements ITweetAPI {
     return documents.documents;
   }
 
-  @override
-  Stream<RealtimeMessage> getLatestTweet() {
-    return _realtime.subscribe([
-      'databases.${AppwriteConstants.databaseId}.collections.${AppwriteConstants.tweetsCollectionId}.documents',
-    ]).stream;
-  }
+  // @override
+  // Stream<RealtimeMessage> getLatestTweet() {
+  //   return _realtime.subscribe([
+  //     'databases.${AppwriteConstants.databaseId}.collections.*.documents',
+  //   ]).stream;
+  // }
 
   @override
   FutureEitherVoid toggleTweetLike(Tweet tweet) async {
@@ -113,6 +116,26 @@ class TweetAPI implements ITweetAPI {
   }
 
   @override
+  FutureEitherVoid updateCommentIds(Tweet tweet) async {
+    try {
+      await _db.updateDocument(
+        databaseId: AppwriteConstants.databaseId,
+        collectionId: AppwriteConstants.tweetsCollectionId,
+        documentId: tweet.id,
+        data: {
+          'commentIds': tweet.commentIds,
+        },
+      );
+      return right(null);
+    } on AppwriteException catch (error, stackTrace) {
+      return left(Failure(
+        error.message ?? 'Something went wrong',
+        stackTrace,
+      ));
+    }
+  }
+
+  @override
   Future<List<Document>> getRepliesToTweet(Tweet tweet) async {
     final documents = await _db.listDocuments(
       databaseId: AppwriteConstants.databaseId,
@@ -132,5 +155,30 @@ class TweetAPI implements ITweetAPI {
       documentId: id,
     );
     return document;
+  }
+
+  @override
+  Future<List<Document>> getUserTweets(String uid) async {
+    final documents = await _db.listDocuments(
+      databaseId: AppwriteConstants.databaseId,
+      collectionId: AppwriteConstants.tweetsCollectionId,
+      queries: [
+        Query.equal('uid', uid),
+        Query.orderDesc('createdAt'),
+      ],
+    );
+    return documents.documents;
+  }
+
+  @override
+  Future<List<Document>> getTweetsByHashtag(String hashtag) async {
+    final documents = await _db.listDocuments(
+      databaseId: AppwriteConstants.databaseId,
+      collectionId: AppwriteConstants.tweetsCollectionId,
+      queries: [
+        Query.search('hashtags', hashtag),
+      ],
+    );
+    return documents.documents;
   }
 }

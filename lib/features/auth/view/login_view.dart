@@ -101,7 +101,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                           alignment: Alignment.centerRight,
                           child: RoundedSmallButton(
                             label: 'Done',
-                            onTap: onLogin,
+                            onTap: isLoading ? null : onLogin,
                             backgroundColor: Pallete.whiteColor,
                             textColor: Pallete.backgroundColor,
                           ),
@@ -120,7 +120,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    Navigator.pushReplacement(
+                                    Navigator.push(
                                       context,
                                       SignUpView.route(),
                                     );

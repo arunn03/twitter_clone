@@ -12,6 +12,7 @@ import 'package:twitter_clone/features/tweet/controller/tweet_controller.dart';
 import 'package:twitter_clone/features/tweet/widgets/carousel_image.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_icon.dart';
 import 'package:twitter_clone/features/tweet/widgets/tweet_text.dart';
+import 'package:twitter_clone/features/user_profile/view/user_profile_view.dart';
 import 'package:twitter_clone/models/models.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
@@ -49,10 +50,14 @@ class _TweetCardState extends ConsumerState<TweetCard> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserDetailsProvider).value;
-    return currentUser == null
-        ? const SizedBox()
-        : ref.watch(userDataProvider(widget.tweet.uid)).when(
+    final user = ref.watch(currentUserDetailsProvider);
+
+    return user.when(
+      data: (currentUser) {
+        if (currentUser == null) {
+          return const ErrorText(text: 'No user logged in');
+        }
+        return ref.watch(userDataProvider(widget.tweet.uid)).when(
               data: (user) {
                 return Padding(
                   padding: const EdgeInsets.only(
@@ -65,10 +70,20 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        backgroundColor: Pallete.blueColor,
-                        foregroundImage: NetworkImage(user.profilePicture),
-                        radius: 30,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            UserProfileView.route(user),
+                          );
+                        },
+                        child: CircleAvatar(
+                          backgroundColor: Pallete.greyColor,
+                          foregroundImage: user.profilePicture.isNotEmpty
+                              ? NetworkImage(user.profilePicture)
+                              : null,
+                          radius: 30,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -94,29 +109,37 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                 ],
                               ),
                             // if (widget.tweet.retweetedBy.isEmpty)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  user.name,
-                                  style: const TextStyle(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w600,
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  UserProfileView.route(user),
+                                );
+                              },
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    user.name,
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  '@${user.name} . ${timeago.format(
-                                    widget.tweet.createdAt,
-                                    locale: 'en_short',
-                                  )}',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Pallete.greyColor,
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    '@${user.name} . ${timeago.format(
+                                      widget.tweet.createdAt,
+                                      locale: 'en_short',
+                                    )}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Pallete.greyColor,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             if (widget.tweet.repliedTo.isNotEmpty) ...[
                               const SizedBox(height: 5),
@@ -180,6 +203,8 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                 right: 20,
                               ),
                               child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   TweetIconButton(
                                     onTap: () {},
@@ -189,14 +214,49 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                             widget.tweet.likes.length)
                                         .toString(),
                                   ),
-                                  const SizedBox(width: 12),
+                                  Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          onTapLike(
+                                            widget.tweet,
+                                            currentUser,
+                                            context,
+                                          );
+                                        },
+                                        child: widget.tweet.likes
+                                                .contains(currentUser.uid)
+                                            ? SvgPicture.asset(
+                                                AssetsConstants.likeFilledIcon,
+                                                color: Pallete.redColor,
+                                                width: 24,
+                                                height: 24,
+                                              )
+                                            : SvgPicture.asset(
+                                                AssetsConstants
+                                                    .likeOutlinedIcon,
+                                                color: Pallete.greyColor,
+                                              ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        widget.tweet.likes.length.toString(),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: widget.tweet.likes
+                                                  .contains(currentUser.uid)
+                                              ? Pallete.redColor
+                                              : Pallete.greyColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   TweetIconButton(
                                     onTap: () {},
                                     svgPath: AssetsConstants.commentIcon,
                                     text: widget.tweet.commentIds.length
                                         .toString(),
                                   ),
-                                  const SizedBox(width: 12),
                                   TweetIconButton(
                                     onTap: () {
                                       onTapRetweet(
@@ -208,52 +268,19 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                     svgPath: AssetsConstants.retweetIcon,
                                     text: widget.tweet.reshareCount.toString(),
                                   ),
-                                  const SizedBox(width: 12),
                                   // TweetIconButton(
                                   //   onTap: () {},
                                   //   svgPath: AssetsConstants.likeOutlinedIcon,
                                   //   text: widget.tweet.likes.length.toString(),
                                   // ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      onTapLike(
-                                        widget.tweet,
-                                        currentUser,
-                                        context,
-                                      );
-                                    },
-                                    child: widget.tweet.likes
-                                            .contains(currentUser.uid)
-                                        ? SvgPicture.asset(
-                                            AssetsConstants.likeFilledIcon,
-                                            color: Pallete.redColor,
-                                            width: 24,
-                                            height: 24,
-                                          )
-                                        : SvgPicture.asset(
-                                            AssetsConstants.likeOutlinedIcon,
-                                            color: Pallete.greyColor,
-                                          ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    widget.tweet.likes.length.toString(),
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: widget.tweet.likes
-                                              .contains(currentUser.uid)
-                                          ? Pallete.redColor
-                                          : Pallete.greyColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  GestureDetector(
-                                    onTap: () {},
-                                    child: const Icon(
-                                      Icons.share_outlined,
-                                      color: Pallete.greyColor,
-                                    ),
-                                  ),
+
+                                  // GestureDetector(
+                                  //   onTap: () {},
+                                  //   child: const Icon(
+                                  //     Icons.share_outlined,
+                                  //     color: Pallete.greyColor,
+                                  //   ),
+                                  // ),
                                 ],
                               ),
                             ),
@@ -266,9 +293,17 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                 );
               },
               error: (error, stackTrace) {
+                // print(stackTrace);
                 return ErrorText(text: error.toString());
               },
               loading: () => const Loader(),
             );
+      },
+      error: (error, st) {
+        // print(st);
+        return ErrorText(text: error.toString());
+      },
+      loading: () => const Loader(),
+    );
   }
 }

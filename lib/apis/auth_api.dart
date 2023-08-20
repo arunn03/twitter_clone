@@ -22,6 +22,8 @@ abstract class IAuthAPI {
     required String email,
     required String password,
   });
+
+  FutureEitherVoid logout();
 }
 
 class AuthAPI implements IAuthAPI {
@@ -77,6 +79,19 @@ class AuthAPI implements IAuthAPI {
           stackTrace,
         ),
       );
+    }
+  }
+
+  @override
+  FutureEitherVoid logout() async {
+    try {
+      await _account.deleteSession(sessionId: 'current');
+      return right(null);
+    } on AppwriteException catch (error, stackTrace) {
+      return left(Failure(
+        error.message ?? 'Something went wrong',
+        stackTrace,
+      ));
     }
   }
 }

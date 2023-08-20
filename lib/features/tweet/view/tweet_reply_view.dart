@@ -27,24 +27,27 @@ class TweetReplyView extends ConsumerWidget {
           ref.watch(repliesToTweetProvider(tweet)).when(
                 data: (tweets) => ref.watch(latestTweetProvider).when(
                   data: (data) {
-                    var payload = Tweet.fromMap(data.payload);
-                    if (payload.repliedTo == tweet.id) {
-                      if (data.events.contains(
-                            'databases.*.collections.${AppwriteConstants.tweetsCollectionId}.documents.*.create',
-                          ) &&
-                          !tweets.contains(payload)) {
-                        tweets.insert(0, payload);
-                      } else if (data.events.contains(
-                        'databases.*.collections.${AppwriteConstants.tweetsCollectionId}.documents.*.update',
-                      )) {
-                        var tweetId = payload.id;
-                        var tweet = tweets.where((e) => e.id == tweetId).first;
-                        final index = tweets.indexOf(tweet);
-                        tweets.removeWhere((e) => e.id == tweetId);
-                        tweets.insert(index, payload);
+                    const createEvent =
+                        'databases.*.collections.${AppwriteConstants.tweetsCollectionId}.documents.*.create';
+                    const updateEvent =
+                        'databases.*.collections.${AppwriteConstants.tweetsCollectionId}.documents.*.update';
+                    if (data.events.contains(createEvent) ||
+                        data.events.contains(updateEvent)) {
+                      var payload = Tweet.fromMap(data.payload);
+                      if (payload.repliedTo == tweet.id) {
+                        if (data.events.contains(createEvent) &&
+                            !tweets.contains(payload)) {
+                          tweets.insert(0, payload);
+                        } else if (data.events.contains(updateEvent)) {
+                          var tweetId = payload.id;
+                          var tweet =
+                              tweets.where((e) => e.id == tweetId).first;
+                          final index = tweets.indexOf(tweet);
+                          tweets.removeWhere((e) => e.id == tweetId);
+                          tweets.insert(index, payload);
+                        }
                       }
                     }
-
                     return Expanded(
                       child: ListView.builder(
                         itemCount: tweets.length,
@@ -110,6 +113,7 @@ class TweetReplyView extends ConsumerWidget {
                       images: const [],
                       context: context,
                       repliedTo: tweet.id,
+                      repliedToUserId: tweet.uid,
                     );
               },
               decoration: const InputDecoration(

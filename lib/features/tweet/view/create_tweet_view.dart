@@ -44,6 +44,7 @@ class _CreateTweetViewState extends ConsumerState<CreateTweetView> {
           images: _images,
           context: context,
           repliedTo: '',
+          repliedToUserId: '',
         );
   }
 
@@ -51,6 +52,8 @@ class _CreateTweetViewState extends ConsumerState<CreateTweetView> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserDetailsProvider).value;
     final isLoading = ref.watch(tweetControllerProvider);
+    print(currentUser);
+    print(isLoading);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

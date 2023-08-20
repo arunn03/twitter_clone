@@ -15,6 +15,7 @@ final storageAPIProvider = Provider(
 
 abstract class IStorageAPI {
   Future<List<String>> uploadImages(List<File> files);
+  Future<dynamic> deleteImage(String fileId);
 }
 
 class StorageAPI implements IStorageAPI {
@@ -34,5 +35,14 @@ class StorageAPI implements IStorageAPI {
       imageLinks.add(AppwriteConstants.imageURL(image.$id));
     }
     return imageLinks;
+  }
+
+  @override
+  Future<dynamic> deleteImage(String fileId) async {
+    final result = await _storage.deleteFile(
+      bucketId: AppwriteConstants.imagesBucketId,
+      fileId: fileId,
+    );
+    return result;
   }
 }

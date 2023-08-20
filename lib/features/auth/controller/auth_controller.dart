@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/apis/auth_api.dart';
 import 'package:twitter_clone/apis/user_api.dart';
 import 'package:twitter_clone/core/core.dart';
-import 'package:twitter_clone/features/auth/view/login_view.dart';
-// import 'package:twitter_clone/features/home/view/home_view.dart';
 import 'package:twitter_clone/models/user.dart';
 
 class AuthControllerNotifier extends StateNotifier<bool> {
@@ -43,14 +41,14 @@ class AuthControllerNotifier extends StateNotifier<bool> {
           bio: '',
           isVerified: false,
         );
-        state = false;
-        final res2 = await _userAPI.saveUserData(user: user);
         state = true;
+        final res2 = await _userAPI.saveUserData(user: user);
+        state = false;
         res2.fold(
           (l) => showSnackBar(context, l.message),
           (r) async {
             showSnackBar(context, 'Account has been created. Please login.');
-            Navigator.pushReplacement(context, LoginView.route());
+            Navigator.pop(context);
           },
         );
       },
@@ -66,6 +64,17 @@ class AuthControllerNotifier extends StateNotifier<bool> {
     state = true;
     final res = await _authAPI.login(email: email, password: password);
     state = false;
+    res.fold(
+      (l) => showSnackBar(context, l.message),
+      (r) => ref.read(currentUserProvider.notifier).setUser(),
+    );
+  }
+
+  void logout({
+    required BuildContext context,
+    required WidgetRef ref,
+  }) async {
+    final res = await _authAPI.logout();
     res.fold(
       (l) => showSnackBar(context, l.message),
       (r) => ref.read(currentUserProvider.notifier).setUser(),
@@ -122,3 +131,8 @@ final currentUserProvider =
   final authController = ref.watch(authControllerProvider.notifier);
   return CurrentUserNotifier(authController: authController);
 });
+
+// final currentUserProvider = FutureProvider((ref) {
+//   final authController = ref.watch(authControllerProvider.notifier);
+//   return authController.currentUser();
+// });
